@@ -79,7 +79,8 @@ const state = {
   deleteTargetId: null,
   recurringExpenses: [],
   heatmapMonth: new Date(),
-  unlockedAchievements: []
+  unlockedAchievements: [],
+  firstVisit: true
 };
 
 // ---------- Storage Keys ---------- //
@@ -88,7 +89,8 @@ const STORAGE_KEYS = {
   budget: 'et_budget',
   apiConfig: 'et_api_config',
   recurring: 'et_recurring',
-  achievements: 'et_achievements'
+  achievements: 'et_achievements',
+  firstVisit: 'et_first_visit'
 };
 
 // ---------- Persistence ---------- //
@@ -99,6 +101,7 @@ function saveToStorage() {
     localStorage.setItem(STORAGE_KEYS.apiConfig, JSON.stringify(state.apiConfig));
     localStorage.setItem(STORAGE_KEYS.recurring, JSON.stringify(state.recurringExpenses));
     localStorage.setItem(STORAGE_KEYS.achievements, JSON.stringify(state.unlockedAchievements));
+    localStorage.setItem(STORAGE_KEYS.firstVisit, JSON.stringify(state.firstVisit));
   } catch (e) {
     console.warn('localStorage save failed:', e);
   }
@@ -111,21 +114,26 @@ function loadFromStorage() {
     const apiConfig = localStorage.getItem(STORAGE_KEYS.apiConfig);
     const recurring = localStorage.getItem(STORAGE_KEYS.recurring);
     const achievements = localStorage.getItem(STORAGE_KEYS.achievements);
+    const firstVisit = localStorage.getItem(STORAGE_KEYS.firstVisit);
 
     if (expenses) {
       state.expenses = JSON.parse(expenses);
+      state.firstVisit = false;
     } else {
       // First visit — load sample data
       state.expenses = SAMPLE_EXPENSES.map(e => ({ ...e }));
+      state.firstVisit = true;
     }
 
     if (budget) state.monthlyBudget = JSON.parse(budget);
     if (apiConfig) state.apiConfig = JSON.parse(apiConfig);
     if (recurring) state.recurringExpenses = JSON.parse(recurring);
     if (achievements) state.unlockedAchievements = JSON.parse(achievements);
+    if (firstVisit !== null) state.firstVisit = JSON.parse(firstVisit);
   } catch (e) {
     console.warn('localStorage load failed:', e);
     state.expenses = SAMPLE_EXPENSES.map(e => ({ ...e }));
+    state.firstVisit = true;
   }
 }
 
@@ -578,6 +586,36 @@ function clearAllData() {
   showToast('All data cleared', 'info');
 }
 
+function showFirstVisitWarning() {
+  if (!state.firstVisit) return;
+  
+  state.firstVisit = false;
+  saveToStorage();
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal modal--active';
+  modal.id = 'firstVisitModal';
+  modal.innerHTML = `
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+      <div style="text-align: center; padding: 2rem;">
+        <h2 style="margin-bottom: 1rem;">📝 Sample Data Loaded</h2>
+        <p style="margin-bottom: 1.5rem; color: var(--gray-600); line-height: 1.6;">
+          This app loaded with <strong>sample expense data</strong> to show you how it works. 
+          Feel free to edit, delete, or add your own expenses.
+        </p>
+        <p style="margin-bottom: 2rem; color: var(--gray-500); font-size: 0.9rem;">
+          <strong>💡 Tip:</strong> Achievements are earned as you log real expenses!
+        </p>
+        <button class="btn btn--primary" style="width: 100%;" onclick="document.getElementById('firstVisitModal').remove()">
+          Got It! Let's Start
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
 // ---------- Modal Management ---------- //
 function openExpenseModal(editId = null) {
   const modal = dom.expenseModal;
@@ -1001,16 +1039,31 @@ function renderAchievements() {
 
   const prevUnlocked = new Set(state.unlockedAchievements);
   const newlyUnlocked = [];
+  let changed = false;
 
+  // Check each achievement to see if it should be earned
   ACHIEVEMENT_DEFS.forEach(a => {
-    if (!prevUnlocked.has(a.id) && a.check(state)) {
+    const isEarned = a.check(state);
+    const wasUnlocked = prevUnlocked.has(a.id);
+
+    // New achievement earned
+    if (!wasUnlocked && isEarned) {
       newlyUnlocked.push(a);
       state.unlockedAchievements.push(a.id);
+      changed = true;
+    }
+    // Achievement lost (expenses deleted)
+    else if (wasUnlocked && !isEarned) {
+      state.unlockedAchievements = state.unlockedAchievements.filter(id => id !== a.id);
+      changed = true;
     }
   });
 
-  if (newlyUnlocked.length > 0) {
+  if (changed) {
     saveToStorage();
+  }
+
+  if (newlyUnlocked.length > 0) {
     newlyUnlocked.forEach(a => {
       showToast(`🏅 Achievement Unlocked: ${a.name}!`, 'success', 4000);
     });
@@ -1403,6 +1456,7 @@ function init() {
   loadFromStorage();
   bindEvents();
   render();
+  showFirstVisitWarning();
   registerServiceWorker();
 }
 

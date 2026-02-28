@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseTracker — Smart Expense Management</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#14b8a6">
+    <meta name="description" content="Track expenses, set budgets, and get AI-powered spending insights">
+
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ExpenseTracker">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- Windows -->
+    <meta name="msapplication-TileImage" content="icons/icon-144.png">
+    <meta name="msapplication-TileColor" content="#0f172a">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header__top">
+                    <div class="header__left">
+                        <h1 class="header__title">💰 ExpenseTracker</h1>
+                        <p class="header__subtitle">Smart expense management</p>
+                    </div>
+                    <div class="header__actions">
+                        <button class="btn-icon" id="exportBtn" title="Export CSV">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                        <button class="btn-icon" id="settingsBtn" title="Settings">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="header__stats">
+                    <div class="stat-card">
+                        <span class="stat-card__label">This Month</span>
+                        <span class="stat-card__value" id="monthlyTotal">₹0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card__label">Budget Left</span>
+                        <span class="stat-card__value" id="budgetLeft">₹0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card__label">Daily Avg</span>
+                        <span class="stat-card__value" id="dailyAvg">₹0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-card__label">Transactions</span>
+                        <span class="stat-card__value" id="expenseCount">0</span>
+                    </div>
+                </div>
+
+                <!-- Budget Progress Bar -->
+                <div class="budget-bar">
+                    <div class="budget-bar__info">
+                        <span id="budgetText">0% of budget used</span>
+                        <span id="budgetAmount"></span>
+                    </div>
+                    <div class="budget-bar__track">
+                        <div class="budget-bar__fill" id="budgetProgress"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="container">
+
+                <!-- Fab Button for Adding -->
+                <button class="fab" id="addExpenseBtn" title="Add Expense">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+
+                <!-- Quick Add Templates -->
+                <section class="section" id="quickAddSection">
+                    <div class="section__header">
+                        <h2 class="section__title">Quick Add</h2>
+                    </div>
+                    <div class="quick-add-row" id="quickAddRow">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Insights Section -->
+                <section class="section" id="insightsSection">
+                    <div class="section__header">
+                        <h2 class="section__title">Insights</h2>
+                        <button class="btn btn--ghost btn--sm" id="generateInsights">
+                            🧠 AI Analysis
+                        </button>
+                    </div>
+
+                    <div class="insights-grid">
+                        <!-- Spending Pattern Card -->
+                        <div class="card insight-card">
+                            <div class="card__body">
+                                <div class="insight-card__icon-row">
+                                    <span class="insight-icon insight-icon--pattern">📈</span>
+                                    <h3 class="insight-card__title">Spending Pattern</h3>
+                                </div>
+                                <p id="patternText" class="insight-card__body">Add expenses to see patterns...</p>
+                            </div>
+                        </div>
+
+                        <!-- Budget Ring Card -->
+                        <div class="card insight-card">
+                            <div class="card__body">
+                                <div class="insight-card__icon-row">
+                                    <span class="insight-icon insight-icon--budget">🎯</span>
+                                    <h3 class="insight-card__title">Budget Status</h3>
+                                </div>
+                                <div class="ring-container">
+                                    <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+                                        <circle class="progress-ring__bg" cx="60" cy="60" r="50" />
+                                        <circle class="progress-ring__fill" id="progressRing" cx="60" cy="60" r="50" />
+                                        <text class="progress-ring__text" x="60" y="56" id="progressPercent">0%</text>
+                                        <text class="progress-ring__sub" x="60" y="72" id="progressSub">used</text>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Categories Card -->
+                        <div class="card insight-card">
+                            <div class="card__body">
+                                <div class="insight-card__icon-row">
+                                    <span class="insight-icon insight-icon--category">🏷️</span>
+                                    <h3 class="insight-card__title">Top Categories</h3>
+                                </div>
+                                <div id="categoryBars" class="category-bars"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Spending Heatmap -->
+                <section class="section" id="heatmapSection">
+                    <div class="section__header">
+                        <h2 class="section__title">Spending Calendar</h2>
+                        <div class="heatmap-nav">
+                            <button class="btn btn--ghost btn--sm" id="heatmapPrev">←</button>
+                            <span class="heatmap-month-label" id="heatmapMonthLabel"></span>
+                            <button class="btn btn--ghost btn--sm" id="heatmapNext">→</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card__body">
+                            <div class="heatmap-legend">
+                                <span class="heatmap-legend__label">Less</span>
+                                <span class="heatmap-legend__cell" style="background:var(--heatmap-0)"></span>
+                                <span class="heatmap-legend__cell" style="background:var(--heatmap-1)"></span>
+                                <span class="heatmap-legend__cell" style="background:var(--heatmap-2)"></span>
+                                <span class="heatmap-legend__cell" style="background:var(--heatmap-3)"></span>
+                                <span class="heatmap-legend__cell" style="background:var(--heatmap-4)"></span>
+                                <span class="heatmap-legend__label">More</span>
+                            </div>
+                            <div class="heatmap-weekdays">
+                                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                            </div>
+                            <div class="heatmap-grid" id="heatmapGrid"></div>
+                            <div class="heatmap-tooltip hidden" id="heatmapTooltip"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Month Comparison -->
+                <section class="section" id="comparisonSection">
+                    <div class="section__header">
+                        <h2 class="section__title">Monthly Trend</h2>
+                    </div>
+                    <div class="card">
+                        <div class="card__body">
+                            <div class="month-chart" id="monthChart"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Achievements -->
+                <section class="section" id="achievementsSection">
+                    <div class="section__header">
+                        <h2 class="section__title">Achievements</h2>
+                        <span class="section__count" id="achievementCount"></span>
+                    </div>
+                    <div class="achievements-grid" id="achievementsGrid"></div>
+                </section>
+
+                <!-- Recurring Expenses -->
+                <section class="section" id="recurringSection">
+                    <div class="section__header">
+                        <h2 class="section__title">Recurring</h2>
+                        <button class="btn btn--ghost btn--sm" id="addRecurringBtn">+ Add</button>
+                    </div>
+                    <div class="recurring-list" id="recurringList">
+                        <div class="empty-state" id="recurringEmpty">
+                            <p class="empty-state__text">No recurring expenses set up yet</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Expense List Section -->
+                <section class="section" id="expenseSection">
+                    <div class="section__header">
+                        <h2 class="section__title">Expenses</h2>
+                        <span class="section__count" id="filteredCount"></span>
+                    </div>
+
+                    <!-- Filters Row -->
+                    <div class="filters-row">
+                        <div class="search-box">
+                            <svg class="search-box__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="searchInput" class="search-box__input" placeholder="Search expenses...">
+                        </div>
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="">All Categories</option>
+                        </select>
+                        <select id="monthFilter" class="filter-select">
+                            <option value="">All Time</option>
+                        </select>
+                        <select id="sortSelect" class="filter-select">
+                            <option value="date-desc">Newest</option>
+                            <option value="date-asc">Oldest</option>
+                            <option value="amount-desc">Highest ₹</option>
+                            <option value="amount-asc">Lowest ₹</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Summary -->
+                    <div class="filter-summary hidden" id="filterSummary">
+                        <span id="filterSummaryText"></span>
+                        <button class="btn btn--ghost btn--xs" id="clearFilters">Clear all</button>
+                    </div>
+
+                    <!-- Expense List -->
+                    <div class="expense-list" id="expenseList">
+                        <!-- Dynamic content -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state hidden" id="emptyState">
+                        <div class="empty-state__icon">📭</div>
+                        <h3 class="empty-state__title">No expenses found</h3>
+                        <p class="empty-state__text">Start tracking your spending by adding an expense!</p>
+                        <button class="btn btn--primary" id="emptyAddBtn">+ Add Your First Expense</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Add/Edit Expense Modal -->
+        <div class="modal hidden" id="expenseModal">
+            <div class="modal__backdrop" id="expenseModalBackdrop"></div>
+            <div class="modal__content modal__content--form">
+                <div class="modal__header">
+                    <h2 id="expenseModalTitle">Add Expense</h2>
+                    <button class="modal__close" id="closeExpenseModal">&times;</button>
+                </div>
+                <div class="modal__body">
+                    <form id="addExpenseForm" novalidate>
+                        <div class="form-group">
+                            <label class="form-label" for="amount">Amount (₹)</label>
+                            <input type="number" id="amount" class="form-control form-control--amount" required min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group form-group--flex">
+                                <label class="form-label" for="date">Date</label>
+                                <input type="date" id="date" class="form-control" required>
+                            </div>
+                            <div class="form-group form-group--flex">
+                                <label class="form-label" for="category">Category</label>
+                                <div class="input-with-btn">
+                                    <select id="category" class="form-control" required>
+                                        <option value="">Select...</option>
+                                    </select>
+                                    <button type="button" class="btn btn--ghost btn--sm btn--suggest" id="suggestCategory" title="AI Suggest Category">
+                                        ✨
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="description">Description</label>
+                            <input type="text" id="description" class="form-control" required placeholder="What did you spend on?" autocomplete="off">
+                        </div>
+
+                        <input type="hidden" id="editExpenseId" value="">
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--secondary" id="cancelExpense">Cancel</button>
+                            <button type="submit" class="btn btn--primary" id="submitBtn">
+                                Add Expense
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal hidden" id="settingsModal">
+            <div class="modal__backdrop" id="settingsBackdrop"></div>
+            <div class="modal__content">
+                <div class="modal__header">
+                    <h2>Settings</h2>
+                    <button class="modal__close" id="closeModal">&times;</button>
+                </div>
+                <div class="modal__body">
+                    <div class="form-group">
+                        <label class="form-label" for="monthlyBudgetInput">Monthly Budget (₹)</label>
+                        <input type="number" id="monthlyBudgetInput" class="form-control" value="25000" min="0">
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <details class="settings-section">
+                        <summary class="settings-section__title">🔗 Google Sheets Integration</summary>
+                        <div class="settings-section__body">
+                            <div class="form-group">
+                                <label class="form-label" for="sheetsId">Google Sheets ID</label>
+                                <input type="text" id="sheetsId" class="form-control" placeholder="Enter your Google Sheets ID">
+                                <small class="form-help">Find this in your Google Sheets URL</small>
+                            </div>
+                        </div>
+                    </details>
+
+                    <details class="settings-section">
+                        <summary class="settings-section__title">🤖 Gemini AI Integration</summary>
+                        <div class="settings-section__body">
+                            <div class="form-group">
+                                <label class="form-label" for="geminiKey">Gemini API Key</label>
+                                <input type="password" id="geminiKey" class="form-control" placeholder="Enter your Gemini API key">
+                                <small class="form-help">Get from <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Google AI Studio</a></small>
+                            </div>
+                        </div>
+                    </details>
+
+                    <div class="divider"></div>
+
+                    <div class="danger-zone">
+                        <p class="danger-zone__label">Danger Zone</p>
+                        <button class="btn btn--danger btn--sm" id="clearAllData">
+                            🗑️ Clear All Data
+                        </button>
+                    </div>
+                </div>
+                <div class="modal__footer">
+                    <button class="btn btn--secondary" id="cancelSettings">Cancel</button>
+                    <button class="btn btn--primary" id="saveSettings">Save Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recurring Expense Modal -->
+        <div class="modal hidden" id="recurringModal">
+            <div class="modal__backdrop" id="recurringBackdrop"></div>
+            <div class="modal__content modal__content--form">
+                <div class="modal__header">
+                    <h2 id="recurringModalTitle">Add Recurring Expense</h2>
+                    <button class="modal__close" id="closeRecurringModal">&times;</button>
+                </div>
+                <div class="modal__body">
+                    <form id="recurringForm" novalidate>
+                        <div class="form-group">
+                            <label class="form-label" for="recurringDesc">Description</label>
+                            <input type="text" id="recurringDesc" class="form-control" required placeholder="e.g., Netflix subscription">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group form-group--flex">
+                                <label class="form-label" for="recurringAmount">Amount (₹)</label>
+                                <input type="number" id="recurringAmount" class="form-control" required min="0" step="0.01">
+                            </div>
+                            <div class="form-group form-group--flex">
+                                <label class="form-label" for="recurringCategory">Category</label>
+                                <select id="recurringCategory" class="form-control" required>
+                                    <option value="">Select...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group form-group--flex">
+                                <label class="form-label" for="recurringFreq">Frequency</label>
+                                <select id="recurringFreq" class="form-control" required>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                            </div>
+                            <div class="form-group form-group--flex">
+                                <label class="form-label" for="recurringDay">Day of Month</label>
+                                <input type="number" id="recurringDay" class="form-control" min="1" max="31" value="1">
+                            </div>
+                        </div>
+                        <input type="hidden" id="editRecurringId" value="">
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--secondary" id="cancelRecurring">Cancel</button>
+                            <button type="submit" class="btn btn--primary" id="submitRecurring">Add Recurring</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal hidden" id="deleteModal">
+            <div class="modal__backdrop" id="deleteBackdrop"></div>
+            <div class="modal__content modal__content--sm">
+                <div class="modal__header">
+                    <h2>Delete Expense?</h2>
+                    <button class="modal__close" id="closeDeleteModal">&times;</button>
+                </div>
+                <div class="modal__body">
+                    <p class="delete-text">This action cannot be undone.</p>
+                    <div class="delete-preview" id="deletePreview"></div>
+                </div>
+                <div class="modal__footer">
+                    <button class="btn btn--secondary" id="cancelDelete">Cancel</button>
+                    <button class="btn btn--danger" id="confirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay hidden" id="loadingOverlay">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

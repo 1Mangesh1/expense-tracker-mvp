@@ -21,7 +21,10 @@ A smart, AI-powered expense management application that helps you track your spe
 - **Gemini AI Integration**: Leverage Google's Gemini AI for category suggestions and insights
 
 ### User Experience
-- **Dark/Light Mode**: Automatic theme switching based on system preferences
+- **Dark/Light Mode**: Manual toggle (☀️/🌙) with persistent preference, plus automatic system-preference detection
+- **Import & Export CSV**: Export all expenses to CSV; import expenses from any CSV with Date/Amount/Description/Category columns
+- **Duplicate Expense**: Copy any expense to today's date with a single click
+- **All-Time Stats Panel**: Lifetime overview — total spent, transaction count, months tracked, average per month, largest expense, top category, and best streak
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Toast Notifications**: Real-time feedback for user actions
 - **Loading States**: Visual feedback during API calls

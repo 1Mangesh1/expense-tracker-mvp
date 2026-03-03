@@ -37,6 +37,13 @@
                         <button class="btn-icon" id="exportBtn" title="Export CSV">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </button>
+                        <input type="file" id="importFile" accept=".csv" style="display:none">
+                        <button class="btn-icon" id="importBtn" title="Import CSV">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </button>
+                        <button class="btn-icon" id="themeToggle" title="Toggle dark mode">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        </button>
                         <button class="btn-icon" id="settingsBtn" title="Settings">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                         </button>
@@ -82,6 +89,39 @@
                 <button class="fab" id="addExpenseBtn" title="Add Expense">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
+
+                <!-- Smart Add -->
+                <section class="section" id="smartAddSection">
+                    <div class="section__header">
+                        <h2 class="section__title">✨ Smart Add</h2>
+                        <span class="section__hint">AI fills the form from plain text</span>
+                    </div>
+                    <div class="card">
+                        <div class="card__body smart-add-card">
+                            <!-- Recent history chips -->
+                            <div class="smart-add-history hidden" id="smartAddHistory"></div>
+                            <!-- Textarea + buttons -->
+                            <div class="smart-add-input-row">
+                                <div class="smart-add-input-wrap">
+                                    <textarea id="smartAddInput" class="smart-add-textarea"
+                                        placeholder='e.g. "lunch 350 today"&#10;or paste multiple lines for batch add'
+                                        rows="2" spellcheck="false"></textarea>
+                                    <div class="smart-add-kbd-hints">
+                                        <span><kbd>Enter</kbd> fill form</span>
+                                        <span><kbd>Shift ↵</kbd> add directly</span>
+                                        <span>multi-line = batch</span>
+                                    </div>
+                                </div>
+                                <div class="smart-add-btns">
+                                    <button class="btn btn--primary" id="smartAddBtn">✨ Parse &amp; Fill</button>
+                                    <button class="btn btn--secondary" id="smartAddDirectBtn">⚡ Add Now</button>
+                                </div>
+                            </div>
+                            <!-- Live preview / batch list -->
+                            <div class="smart-add-preview hidden" id="smartAddPreview"></div>
+                        </div>
+                    </div>
+                </section>
 
                 <!-- Quick Add Templates -->
                 <section class="section" id="quickAddSection">
@@ -142,8 +182,28 @@
                                 <div id="categoryBars" class="category-bars"></div>
                             </div>
                         </div>
+
+                        <!-- Forecast Card -->
+                        <div class="card insight-card">
+                            <div class="card__body">
+                                <div class="insight-card__icon-row">
+                                    <span class="insight-icon insight-icon--forecast">📉</span>
+                                    <h3 class="insight-card__title">Month Forecast</h3>
+                                </div>
+                                <div id="forecastContent" class="forecast-content">
+                                    <p class="insight-card__body">Add expenses to see forecast...</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
+
+                <!-- Anomaly Banner -->
+                <div class="anomaly-banner hidden" id="anomalyBanner">
+                    <span class="anomaly-banner__icon">⚠️</span>
+                    <span class="anomaly-banner__text" id="anomalyBannerText"></span>
+                    <button class="btn btn--ghost btn--xs" id="anomalyDetailsBtn">View all</button>
+                </div>
 
                 <!-- Spending Heatmap -->
                 <section class="section" id="heatmapSection">
@@ -184,6 +244,16 @@
                         <div class="card__body">
                             <div class="month-chart" id="monthChart"></div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Lifetime Stats -->
+                <section class="section" id="lifetimeSection">
+                    <div class="section__header">
+                        <h2 class="section__title">All-Time Stats</h2>
+                    </div>
+                    <div class="lifetime-grid" id="lifetimeGrid">
+                        <!-- Populated by JS -->
                     </div>
                 </section>
 
